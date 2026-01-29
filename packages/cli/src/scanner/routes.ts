@@ -20,16 +20,16 @@ export function extractRoutes(
   // Next.js App Router (app/page.tsx files)
   if (framework === 'nextjs' && relativePath.includes('/app/')) {
     const route = extractNextAppRoute(relativePath);
-    if (route) {
-      routes.push({ ...route, sourceFile: relativePath });
+    if (route && route.path) {
+      routes.push({ ...route, path: route.path, sourceFile: relativePath });
     }
   }
 
   // Next.js Pages Router (pages/*.tsx files)
   if (framework === 'nextjs' && relativePath.includes('/pages/')) {
     const route = extractNextPagesRoute(relativePath);
-    if (route) {
-      routes.push({ ...route, sourceFile: relativePath });
+    if (route && route.path) {
+      routes.push({ ...route, path: route.path, sourceFile: relativePath });
     }
   }
 
