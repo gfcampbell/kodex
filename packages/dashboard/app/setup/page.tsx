@@ -39,7 +39,7 @@ export default function SetupPage() {
     projectPath: "",
     name: "My Product",
     provider: "anthropic",
-    model: "claude-3-5-haiku-20241022",
+    model: "claude-sonnet-4-20250514",
     apiKey: "",
     agentContext: "",
     excludePatterns: DEFAULT_EXCLUDE_PATTERNS,
@@ -254,7 +254,7 @@ export default function SetupPage() {
             onProviderChange={(provider) => {
               // Reset model when provider changes
               const defaultModels: Record<string, string> = {
-                anthropic: "claude-3-5-haiku-20241022",
+                anthropic: "claude-sonnet-4-20250514",
                 openai: "gpt-4o-mini",
                 google: "gemini-2.0-flash",
               };

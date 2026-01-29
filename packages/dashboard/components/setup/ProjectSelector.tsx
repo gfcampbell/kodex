@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -20,6 +20,7 @@ export function ProjectSelector({ value, onChange, onValidate }: ProjectSelector
     hasConfig?: boolean;
     error?: string;
   } | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleValidate = async () => {
     if (!value.trim()) return;
@@ -35,6 +36,29 @@ export function ProjectSelector({ value, onChange, onValidate }: ProjectSelector
     }
   };
 
+  const handleBrowse = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      // Get the path from the first file's webkitRelativePath
+      const relativePath = files[0].webkitRelativePath;
+      const folderName = relativePath.split("/")[0];
+      
+      // Since browser doesn't give us full path, show the folder name
+      // and inform user to enter full path
+      onChange(folderName);
+      setValidation({
+        valid: false,
+        error: `Selected folder: "${folderName}". Please enter the full absolute path to this folder.`,
+      });
+    }
+    // Reset input so same folder can be selected again
+    e.target.value = "";
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -43,7 +67,7 @@ export function ProjectSelector({ value, onChange, onValidate }: ProjectSelector
           Project Selection
         </CardTitle>
         <CardDescription>
-          Enter the path to your project folder
+          Enter the path to your project folder or use Browse to select it
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -60,6 +84,23 @@ export function ProjectSelector({ value, onChange, onValidate }: ProjectSelector
               }}
               className="flex-1"
             />
+            <input
+              ref={fileInputRef}
+              type="file"
+              /* @ts-expect-error webkitdirectory is a non-standard attribute */
+              webkitdirectory=""
+              directory=""
+              className="hidden"
+              onChange={handleFileSelect}
+            />
+            <Button
+              onClick={handleBrowse}
+              variant="outline"
+              type="button"
+            >
+              <FolderOpen className="mr-2 h-4 w-4" />
+              Browse
+            </Button>
             <Button 
               onClick={handleValidate} 
               variant="outline"

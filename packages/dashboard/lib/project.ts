@@ -16,7 +16,7 @@ const DEFAULT_CONFIG: Partial<KodexConfig> = {
   },
   llm: {
     provider: "anthropic",
-    model: "claude-3-5-haiku-20241022",
+    model: "claude-sonnet-4-20250514",
   },
 };
 

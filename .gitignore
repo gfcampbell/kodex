@@ -1,9 +1,16 @@
 # Dependencies
 node_modules/
+.pnpm-store/
 
 # Build outputs
 dist/
 .turbo/
+.next/
+out/
+
+# Next.js
+*.tsbuildinfo
+next-env.d.ts
 
 # IDE
 .idea/
