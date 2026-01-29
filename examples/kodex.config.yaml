@@ -1,0 +1,70 @@
+# Example Kodex Configuration
+# Copy this to your project root and customize
+
+# Project info
+name: "My Awesome App"
+version: "1.0.0"
+
+# What to scan
+scan:
+  include:
+    - "src/**/*.{ts,tsx,js,jsx}"
+  exclude:
+    - "**/*.test.*"
+    - "**/*.spec.*"
+    - "**/node_modules/**"
+    - "**/__tests__/**"
+    - "**/__mocks__/**"
+  
+  # Framework hint (react | nextjs | express | auto)
+  # Auto-detection works for most projects
+  framework: auto
+
+# Documentation settings
+docs:
+  outputDir: ".kodex/docs"
+  format: both  # markdown | json | both
+  
+  # Common topics to generate
+  # See docs/COMMON-TOPICS.md for full list
+  topics:
+    - authentication
+    - navigation
+    - data
+    - settings
+    - errors
+    - billing
+    - integrations
+
+  # Custom topics specific to your product
+  customTopics:
+    # Example: Custom feature documentation
+    # - id: "myproduct.special-feature"
+    #   name: "Special Feature"
+    #   patterns:
+    #     - "SpecialFeature"
+    #     - "/special"
+    #   prompt: |
+    #     Generate help documentation for the special feature.
+    #     Explain what it does and how to use it.
+
+# LLM settings
+llm:
+  provider: anthropic  # anthropic | openai | google
+  model: claude-3-5-haiku-20241022
+  
+  # For OpenAI:
+  # provider: openai
+  # model: gpt-4o-mini
+  
+  # For Google:
+  # provider: google
+  # model: gemini-2.0-flash
+  
+  # API key (defaults to environment variable)
+  # apiKey: ${ANTHROPIC_API_KEY}
+
+# Dashboard settings (optional)
+dashboard:
+  port: 3333
+  auth: false  # Enable for team use
