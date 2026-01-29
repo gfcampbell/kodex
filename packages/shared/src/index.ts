@@ -252,6 +252,8 @@ export interface ScanConfig {
   exclude: string[];
   /** Framework hint (auto-detected if not specified) */
   framework?: 'react' | 'nextjs' | 'express' | 'auto';
+  /** Custom instructions to guide the agent during codebase analysis */
+  agentContext?: string;
 }
 
 /**

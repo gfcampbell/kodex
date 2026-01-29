@@ -21,6 +21,7 @@ import type {
 interface GenerateOptions {
   changedOnly?: boolean;
   dryRun?: boolean;
+  mock?: boolean;
 }
 
 interface GenerateResult {
@@ -46,8 +47,8 @@ export async function generateDocs(
   let skipped = 0;
   let totalTokens = 0;
 
-  // Get the LLM client
-  const model = createModel(config);
+  // Get the LLM client (skip if mocking)
+  const model = options.mock ? null : createModel(config);
 
   // Build a map of existing items by topic
   const existingByTopic = new Map<string, KnowledgeItem>();
@@ -90,7 +91,9 @@ export async function generateDocs(
     // Generate the doc
     if (!options.dryRun) {
       try {
-        const result = await generateDoc(model, topic, context, config.name);
+        const result = options.mock
+          ? generateMockDoc(topic, context, config.name)
+          : await generateDoc(model, topic, context, config.name);
         
         const item: KnowledgeItem = {
           id: existing?.id || `kb-${topic.id.replace(/\./g, '-')}-${Date.now()}`,
@@ -278,5 +281,114 @@ Respond in this exact JSON format:
       pages: [],
       content: result.text,
     };
+  }
+}
+
+/**
+ * Generate a mock doc for testing without an LLM
+ */
+function generateMockDoc(
+  feature: DetectedFeature,
+  context: string,
+  productName: string
+): { title: string; pages: string[]; content: string } {
+  const topicName = feature.id.split('.').pop()?.replace(/-/g, ' ') || feature.id;
+  const titleCase = topicName.replace(/\b\w/g, c => c.toUpperCase());
+
+  // Extract page paths from context
+  const pageMatches = context.match(/- (\/\S+)/g) || [];
+  const pages = pageMatches.map(m => m.replace('- ', '')).slice(0, 5);
+
+  // Extract UI elements from context
+  const uiMatches = context.match(/\[(\w+)\] "([^"]+)"/g) || [];
+  const uiElements = uiMatches.slice(0, 5).map(m => {
+    const match = m.match(/\[(\w+)\] "([^"]+)"/);
+    return match ? { type: match[1], value: match[2] } : null;
+  }).filter(Boolean);
+
+  const steps = uiElements.length > 0
+    ? uiElements.map((el, i) => `${i + 1}. Look for the **${el!.value}** ${el!.type}`).join('\n')
+    : `1. Navigate to the relevant page\n2. Follow the on-screen instructions`;
+
+  const content = `# ${titleCase}
+
+This article explains how to use the **${topicName}** feature in ${productName}.
+
+## Overview
+
+The ${topicName} feature helps you manage your ${topicName.toLowerCase()} settings and preferences.
+
+## How to Use
+
+${steps}
+
+## Related Pages
+
+${pages.length > 0 ? pages.map(p => `- \`${p}\``).join('\n') : '- See your application dashboard'}
+
+---
+
+*This is a mock-generated article for testing purposes. Confidence: ${feature.confidence.toFixed(2)}*
+`;
+
+  return { title: titleCase, pages, content };
+}
+
+/**
+ * Regenerate a single documentation item
+ */
+export async function regenerateSingleDoc(
+  itemId: string,
+  codeMap: CodeMap,
+  config: KodexConfig,
+  existingKb: KnowledgeBase,
+  options: { mock?: boolean } = {}
+): Promise<KnowledgeItem | null> {
+  // Find the existing item
+  const existingItem = existingKb.items.find(item => item.id === itemId);
+  if (!existingItem) {
+    return null;
+  }
+
+  // Find the corresponding feature from the codeMap
+  const feature = codeMap.features.find(f => f.id === existingItem.topic);
+  if (!feature) {
+    // If no matching feature found, return existing item with updated timestamp
+    return {
+      ...existingItem,
+      generatedAt: new Date().toISOString(),
+      status: 'draft',
+      humanEdited: false,
+    };
+  }
+
+  // Get the LLM client
+  const model = options.mock ? null : createModel(config);
+
+  // Build context for generation
+  const context = buildContext(feature, codeMap);
+
+  try {
+    const result = options.mock
+      ? generateMockDoc(feature, context, config.name)
+      : await generateDoc(model, feature, context, config.name);
+
+    const regeneratedItem: KnowledgeItem = {
+      ...existingItem,
+      title: result.title,
+      pages: result.pages.length > 0 ? result.pages : existingItem.pages,
+      content: result.content,
+      sourceFiles: feature.evidence.map(e => e.sourceFile),
+      codeVersion: codeMap.meta.scannedAt,
+      generatedAt: new Date().toISOString(),
+      status: 'draft',
+      confidence: feature.confidence,
+      humanEdited: false,
+    };
+
+    return regeneratedItem;
+  } catch (error) {
+    console.error(`Failed to regenerate doc ${itemId}:`, error);
+    return null;
   }
 }

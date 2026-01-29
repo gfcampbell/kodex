@@ -18,6 +18,7 @@ interface ScanOptions {
   changed?: boolean;
   dryRun?: boolean;
   generate?: boolean;
+  mock?: boolean;
 }
 
 export async function scanCommand(options: ScanOptions): Promise<void> {
@@ -97,6 +98,7 @@ export async function scanCommand(options: ScanOptions): Promise<void> {
     const result = await generateDocs(codeMap, config, kb, {
       changedOnly: options.changed,
       dryRun: options.dryRun,
+      mock: options.mock,
     });
     
     spinner.succeed('Documentation generated');

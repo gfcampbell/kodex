@@ -34,6 +34,7 @@ program
   .option('-c, --changed', 'Only regenerate docs for changed files')
   .option('--dry-run', 'Show what would be generated without writing')
   .option('--no-generate', 'Only scan, skip doc generation')
+  .option('--mock', 'Use mock LLM responses (for testing)')
   .action(scanCommand);
 
 // Review generated docs
